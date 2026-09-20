@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="theme-color" content="#0a1628"/>
+<title>Remisero</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent;}
+.t-azul{--bg:#0a1628;--card:#0f2040;--c2:#1a3a6e;--borde:#1e4a8a;--txt:#e8f4ff;--muted:#7ab0e0;--btn:#2979ff;--btxt:#000;}
+.t-celeste{--bg:#0d2137;--card:#0f2e4a;--c2:#1a4a6e;--borde:#1e5a8a;--txt:#e8f6ff;--muted:#5bb8e0;--btn:#00b0ff;--btxt:#000;}
+.t-violeta{--bg:#1a0a2e;--card:#2a1040;--c2:#3a1a5e;--borde:#5a2a8e;--txt:#f0e8ff;--muted:#b07ad0;--btn:#d500f9;--btxt:#000;}
+.t-verde{--bg:#0a1a0a;--card:#122212;--c2:#1e3a1e;--borde:#2a5a2a;--txt:#e8f8e8;--muted:#5ab85a;--btn:#76ff03;--btxt:#000;}
+.t-dorado{--bg:#1a1200;--card:#2a1e00;--c2:#3a2e00;--borde:#5a4a00;--txt:#fff8e8;--muted:#c8a030;--btn:#ffea00;--btxt:#000;}
+.t-rojo{--bg:#1a0a0a;--card:#2e1010;--c2:#3e1a1a;--borde:#6a2020;--txt:#fff0f0;--muted:#d07070;--btn:#ff1744;--btxt:#000;}
+body{background:var(--bg);color:var(--txt);min-height:100vh;}
+#app{max-width:480px;margin:0 auto;padding:12px;}
+.card{background:var(--card);border-radius:14px;border:1.5px solid var(--borde);padding:15px;margin-bottom:11px;}
+.inp{width:100%;border:2px solid var(--borde);border-radius:10px;padding:12px;background:var(--c2);color:var(--txt);font-size:17px;font-family:inherit;outline:none;}
+.inp:focus{border-color:var(--btn);}
+.inp-big{font-size:26px;font-weight:700;}
+.btn-main{width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;margin-top:6px;box-shadow:0 0 16px var(--btn);font-family:inherit;}
+.btn-sm{padding:8px 13px;border-radius:9px;font-size:13px;font-weight:700;border:1.5px solid var(--borde);background:var(--c2);color:var(--muted);cursor:pointer;font-family:inherit;}
+.btn-del{padding:7px 12px;border-radius:8px;font-size:13px;font-weight:700;border:2px solid #e74c3c;background:#e74c3c;color:#fff;cursor:pointer;font-family:inherit;}
+.tog{flex:1;padding:12px 4px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;border:2.5px solid var(--borde);background:var(--c2);color:var(--muted);text-align:center;font-family:inherit;}
+.tog.on{border-color:var(--btn);background:var(--card);color:var(--btn);box-shadow:0 0 10px var(--btn);}
+.stat{background:var(--c2);border-radius:9px;padding:10px;}
+.lbl{color:var(--muted);font-size:13px;font-weight:600;display:block;margin-bottom:6px;}
+.fila{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--borde);}
+.fila:last-child{border:none;}
+.tab{flex:1;padding:9px;border-radius:8px;font-size:12px;font-weight:700;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
+.tab.on{background:var(--btn);color:var(--btxt);}
+.badge{background:var(--btn);color:var(--btxt);border-radius:8px;padding:5px 16px;font-size:20px;font-weight:800;letter-spacing:3px;box-shadow:0 0 10px var(--btn);}
+.oculto{display:none!important;}
+.notif{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:var(--btn);color:var(--btxt);border-radius:10px;padding:11px 18px;font-size:14px;font-weight:800;z-index:999;box-shadow:0 0 14px var(--btn);display:none;text-align:center;max-width:92%;min-width:200px;}
+.reg-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--borde);gap:6px;}
+.reg-row:last-child{border:none;}
+.temas-ov{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.temas-ov.v{opacity:1;pointer-events:all;}
+.temas-pan{background:#111;border-radius:22px 22px 0 0;padding:20px;width:100%;max-width:480px;}
+.tema-op{border-radius:12px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;}
+.tema-op.on{border-color:#fff;}
+.tema-prev{height:58px;display:flex;align-items:center;justify-content:center;}
+.u-card{background:var(--c2);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--borde);}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="t-azul" id="body">
+<div id="app">
+<div class="notif" id="notif"></div>
+
+<!-- TEMAS -->
+<div class="temas-ov" id="temas-ov">
+  <div class="temas-pan">
+    <p style="color:#fff;font-size:17px;font-weight:700;margin-bottom:4px;text-align:center;">🎨 Elegí tu color</p>
+    <p style="color:#888;font-size:12px;margin-bottom:14px;text-align:center;">Se guarda automáticamente</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <div class="tema-op on" id="tema-azul"><div class="tema-prev" style="background:linear-gradient(135deg,#0a1628,#1a3a6e);"><div style="width:24px;height:24px;border-radius:50%;background:#2979ff;box-shadow:0 0 8px #2979ff;"></div></div><div style="font-size:11px;font-weight:700;color:#fff;text-align:center;padding:5px;background:rgba(0,0,0,.5);">Azul</div></div>
+      <div class="tema-op" id="tema-celeste"><div class="tema-prev" style="background:linear-gradient(135deg,#0d2137,#1a4a6e);"><div style="width:24px;height:24px;border-radius:50%;background:#00b0ff;box-shadow:0 0 8px #00b0ff;"></div></div><div style="font-size:11px;font-weight:700;color:#fff;text-align:center;padding:5px;background:rgba(0,0,0,.5);">Celeste</div></div>
+      <div class="tema-op" id="tema-violeta"><div class="tema-prev" style="background:linear-gradient(135deg,#1a0a2e,#4a1a6e);"><div style="width:24px;height:24px;border-radius:50%;background:#d500f9;box-shadow:0 0 8px #d500f9;"></div></div><div style="font-size:11px;font-weight:700;color:#fff;text-align:center;padding:5px;background:rgba(0,0,0,.5);">Violeta</div></div>
+      <div class="tema-op" id="tema-verde"><div class="tema-prev" style="background:linear-gradient(135deg,#0a1a0a,#1e3a1e);"><div style="width:24px;height:24px;border-radius:50%;background:#76ff03;box-shadow:0 0 8px #76ff03;"></div></div><div style="font-size:11px;font-weight:700;color:#fff;text-align:center;padding:5px;background:rgba(0,0,0,.5);">Verde</div></div>
+      <div class="tema-op" id="tema-dorado"><div class="tema-prev" style="background:linear-gradient(135deg,#1a1200,#4a3500);"><div style="width:24px;height:24px;border-radius:50%;background:#ffea00;box-shadow:0 0 8px #ffea00;"></div></div><div style="font-size:11px;font-weight:700;color:#fff;text-align:center;padding:5px;background:rgba(0,0,0,.5);">Dorado</div></div>
+      <div class="tema-op" id="tema-rojo"><div class="tema-prev" style="background:linear-gradient(135deg,#1a0a0a,#5a1a1a);"><div style="width:24px;height:24px;border-radius:50%;background:#ff1744;box-shadow:0 0 8px #ff1744;"></div></div><div style="font-size:11px;font-weight:700;color:#fff;text-align:center;padding:5px;background:rgba(0,0,0,.5);">Rojo</div></div>
+    </div>
+    <button id="btn-cerrar-tema" style="width:100%;padding:13px;border-radius:10px;font-size:16px;font-weight:700;border:none;background:#333;color:#fff;cursor:pointer;font-family:inherit;">✓ Listo</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="p-login">
+  <!-- BANNER SORTEO LOGIN -->
+<div id="sorteo-banner" style="display:none;background:linear-gradient(135deg,var(--c2),var(--card));border:1.5px solid var(--btn);border-radius:12px;padding:13px;margin-bottom:11px;text-align:center;box-shadow:0 0 12px rgba(41,121,255,0.3);">
+  <p style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;">🎰 SORTEO DEL MES</p>
+  <p style="font-size:14px;font-weight:700;color:var(--txt);" id="sb-desc"></p>
+  <div id="sb-ganador" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--borde);">
+    <p style="font-size:12px;color:var(--muted);">🏆 Ganador</p>
+    <p style="font-size:18px;font-weight:800;color:var(--btn);text-shadow:0 0 8px var(--btn);" id="sb-gnombre"></p>
+    <p style="font-size:22px;font-weight:800;margin-top:2px;" id="sb-gnum"></p>
+  </div>
+</div>
+<div style="text-align:center;padding:10px 0 14px;">
+    <img src="data:image/webp;base64,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" alt="Remisero" style="width:100%;max-width:320px;border-radius:16px;box-shadow:0 0 30px rgba(0,176,255,0.55),0 0 60px rgba(255,23,68,0.2);display:inline-block;"/>
+    <p style="color:var(--muted);font-size:13px;margin-top:8px;">Tu cuaderno digital profesional</p>
+  </div>
+  <div class="card">
+    <!-- Tabs login/registro -->
+    <div style="display:flex;gap:4px;background:var(--c2);border-radius:10px;padding:4px;margin-bottom:13px;">
+      <button class="tab on" id="tab-login">🔑 Entrar</button>
+      <button class="tab" id="tab-registro">✨ Registrarme</button>
+    </div>
+    <!-- LOGIN -->
+    <div id="sec-login">
+      <div style="margin-bottom:11px;"><label class="lbl">Email</label><input class="inp" id="lu" type="email" placeholder="tu@email.com" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="email"/></div>
+      <div style="margin-bottom:11px;"><label class="lbl">Contraseña</label>
+        <div style="position:relative;"><input class="inp" id="lp" type="password" placeholder="••••" style="padding-right:48px;"/><button id="btn-ojo" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:22px;">👁</button></div>
+      </div>
+      <p id="lerr" style="color:#e74c3c;font-size:13px;font-weight:600;margin-bottom:8px;display:none;"></p>
+      <button id="btn-entrar" style="width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;margin-top:6px;box-shadow:0 0 16px var(--btn);font-family:inherit;">🚗 Entrar al turno</button>
+    </div>
+    <!-- REGISTRO -->
+    <div id="sec-registro" class="oculto">
+      <div style="margin-bottom:10px;"><label class="lbl">Nombre completo</label><input class="inp" id="rg-nom" type="text" placeholder="Tu nombre" autocapitalize="words"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">Email</label><input class="inp" id="rg-email" type="email" placeholder="tu@email.com" inputmode="email" autocapitalize="off"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">Contraseña</label><input class="inp" id="rg-pass" type="password" placeholder="Mínimo 6 caracteres"/></div>
+      <div style="margin-bottom:13px;"><label class="lbl" style="margin-bottom:7px;">Soy</label>
+        <div style="display:flex;gap:7px;">
+          <button class="tog on" id="rg-rc">🚗 Chofer</button>
+          <button class="tog" id="rg-rd">🚘 Dueño</button>
+        </div>
+      </div>
+      <div style="background:var(--c2);border-radius:9px;padding:10px;margin-bottom:11px;border-left:3px solid #ff9800;"><p style="font-size:12px;color:var(--muted);font-weight:600;">⚠️ Tu cuenta queda pendiente hasta que el administrador la active.</p></div>
+      <p id="rg-err" style="color:#e74c3c;font-size:13px;font-weight:600;margin-bottom:8px;display:none;"></p>
+      <button id="btn-registrar" style="width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;box-shadow:0 0 16px var(--btn);font-family:inherit;">✨ Crear cuenta</button>
+    </div>
+        <div style="text-align:center;margin-top:11px;">
+      <button id="btn-temas-login" style="background:none;border:2px solid var(--borde);border-radius:18px;padding:9px 22px;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">🎨 Elegí tu color</button>
+    </div>
+  </div>
+</div>
+
+<!-- BIENVENIDA -->
+<div id="p-bv" class="oculto">
+  <div class="card" style="text-align:center;padding:26px 16px;">
+    <p style="color:var(--muted);font-weight:600;margin-bottom:8px;">¡Buen turno!</p>
+    <p style="font-size:54px;font-weight:800;color:var(--btn);text-shadow:0 0 16px var(--btn);line-height:1;" id="bv-turno">Turno 2</p>
+    <p style="font-size:20px;font-weight:700;margin:8px 0 4px;" id="bv-nombre"></p>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:18px;" id="bv-hora"></p>
+    <div style="background:var(--c2);border-radius:10px;padding:13px;margin-bottom:18px;">
+      <p style="color:var(--muted);font-size:12px;font-weight:600;margin-bottom:7px;">🎰 Tu número del sorteo</p>
+      <span class="badge" id="bv-sorteo">---</span>
+    </div>
+    <button id="btn-arrancar" style="width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;box-shadow:0 0 16px var(--btn);font-family:inherit;">🚗 Arrancar turno</button>
+  </div>
+</div>
+
+<!-- CHOFER -->
+<div id="p-chofer" class="oculto">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
+    <div>
+      <p style="color:var(--muted);font-size:12px;font-weight:600;" id="modo-lbl">Turno día ☀️</p>
+      <p style="font-size:32px;font-weight:800;" id="ch-tot">$0</p>
+      <p style="color:var(--muted);font-size:12px;" id="ch-nreg">0 registros</p>
+    </div>
+    <div style="text-align:right;">
+      <p style="color:var(--muted);font-size:11px;">Tu parte (30%)</p>
+      <p style="font-size:24px;font-weight:800;color:var(--btn);text-shadow:0 0 8px var(--btn);" id="ch-parte">$0</p>
+      <div style="display:flex;gap:5px;margin-top:5px;justify-content:flex-end;">
+        <button id="btn-temas-ch" style="background:var(--card);border:1.5px solid var(--borde);border-radius:16px;padding:6px 10px;cursor:pointer;font-size:14px;">🎨</button>
+        <button id="btn-modo" style="background:var(--card);border:1.5px solid var(--borde);border-radius:16px;padding:6px 11px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;"><span id="tog-ico">🌙</span> <span id="tog-txt">Noche</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">¿Qué registrás?</p>
+    <div style="display:flex;gap:6px;margin-bottom:13px;">
+      <button class="tog on" id="t-viaje">🚗<br>Viaje</button>
+      <button class="tog" id="t-comb">⛽<br>Comb.</button>
+      <button class="tog" id="t-gasto">🍫<br>Gasto</button>
+      <button class="tog" id="t-reserva">⏰<br>Reserva</button>
+    </div>
+    <div id="f-viaje">
+      <div style="margin-bottom:10px;"><label class="lbl">Monto</label><input class="inp inp-big" id="v-m" type="number" inputmode="numeric" placeholder="$0"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">Referencia (opcional)</label><input class="inp" id="v-r" type="text" placeholder="centro, hospital..." autocorrect="off"/></div>
+      <div style="margin-bottom:11px;"><label class="lbl" style="margin-bottom:7px;">Forma de pago</label>
+        <div style="display:flex;gap:7px;"><button class="tog on" id="b-ef">💵 Efectivo</button><button class="tog" id="b-vt">📱 Virtual</button></div>
+      </div>
+    </div>
+    <div id="f-comb" class="oculto">
+      <div style="margin-bottom:10px;"><label class="lbl">Monto del ticket</label><input class="inp inp-big" id="c-m" type="number" inputmode="numeric" placeholder="$0"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl" style="margin-bottom:7px;">Tipo de combustible</label>
+        <div style="display:flex;gap:7px;">
+          <button class="tog on" id="b-gnc">🟢 GNC</button>
+          <button class="tog" id="b-nafta">🔴 Nafta</button>
+          <button class="tog" id="b-diesel">🟡 Diesel</button>
+        </div>
+      </div>
+      <div style="background:var(--c2);border-radius:9px;padding:10px;border-left:3px solid var(--btn);"><p style="font-size:12px;color:var(--muted);font-weight:600;">💡 El 10% de combustible se reintegra mensualmente.</p></div>
+    </div>
+    <div id="f-gasto" class="oculto">
+      <div style="margin-bottom:10px;"><label class="lbl">Monto</label><input class="inp inp-big" id="g-m" type="number" inputmode="numeric" placeholder="$0"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">¿Qué fue?</label><input class="inp" id="g-d" type="text" placeholder="puchos, agua..." autocorrect="off"/></div>
+    </div>
+    <div id="f-reserva" class="oculto">
+      <div style="margin-bottom:10px;"><label class="lbl">¿A quién vas a buscar?</label><input class="inp" id="r-d" type="text" placeholder="María del centro..." autocorrect="off"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">¿En cuántos minutos?</label>
+        <select class="inp" id="r-mins" style="padding:11px;"><option value="15">En 15 min</option><option value="30" selected>En 30 min</option><option value="60">En 1 hora</option><option value="120">En 2 horas</option></select>
+      </div>
+      
+    </div>
+    <p id="v-err" style="color:#e74c3c;font-size:13px;font-weight:600;margin-bottom:8px;display:none;">Ingresá los datos para continuar.</p>
+    <button id="btn-g" style="width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;margin-top:6px;box-shadow:0 0 16px var(--btn);font-family:inherit;">＋ Guardar viaje</button>
+  </div>
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">Resumen del turno</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Total viajes</p><p style="font-size:17px;font-weight:700;color:var(--btn);" id="r-tot">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Chofer 30%</p><p style="font-size:17px;font-weight:700;color:var(--btn);" id="r-ch">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Agencia 22%</p><p style="font-size:17px;font-weight:700;" id="r-ag">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Dueño 48%</p><p style="font-size:17px;font-weight:700;" id="r-du">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">⛽ Combustible</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="r-cb">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">🍫 Gastos</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="r-gs">$0</p></div>
+      <div class="stat" style="grid-column:span 2;border:1.5px solid var(--btn);box-shadow:0 0 7px var(--btn);"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">💰 Dueño neto</p><p style="font-size:21px;font-weight:800;color:var(--btn);" id="r-nt">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">💵 Efectivo</p><p style="font-size:17px;font-weight:700;" id="r-ef">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">📱 Virtual</p><p style="font-size:17px;font-weight:700;" id="r-vt">$0</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <p class="lbl" style="margin:0;">📅 Clientes fijos</p>
+      <button id="btn-abrir-prog" class="btn-sm">＋ Agregar</button>
+    </div>
+    <div id="f-nuevo-prog" class="oculto" style="background:var(--c2);border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="margin-bottom:8px;"><label class="lbl">Nombre del cliente</label><input class="inp" id="prog-nom" type="text" placeholder="Ej: Chicos del colegio" autocorrect="off" autocapitalize="words"/></div>
+      <div style="margin-bottom:8px;"><label class="lbl">Horario</label><input class="inp" id="prog-hora" type="time"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">Monto habitual (opcional)</label><input class="inp" id="prog-monto" type="number" inputmode="numeric" placeholder="$0"/></div>
+      <div style="display:flex;gap:7px;">
+        <button id="btn-guardar-prog" style="flex:1;padding:12px;border-radius:9px;font-size:15px;font-weight:700;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;font-family:inherit;box-shadow:0 0 8px var(--btn);">✓ Guardar</button>
+        <button id="btn-cancel-prog" style="flex:1;padding:12px;border-radius:9px;font-size:15px;font-weight:600;border:1.5px solid var(--borde);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">Cancelar</button>
+      </div>
+    </div>
+    <div id="lista-prog"><p style="color:var(--muted);font-size:13px;text-align:center;padding:8px 0;">Sin clientes fijos aún.</p></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <p class="lbl" style="margin:0;">Registros del turno</p>
+      <div style="display:flex;gap:6px;">
+        <button id="btn-cierre" class="btn-sm" style="color:var(--btn);border-color:var(--btn);box-shadow:0 0 6px var(--btn);">Cerrar turno</button>
+        <button id="btn-salir-ch" class="btn-sm" style="color:#e74c3c;border-color:#e74c3c;">Salir</button>
+      </div>
+    </div>
+    <div id="lista-ch"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0;">Sin registros aún. ¡Arrancá!</p></div>
+  </div>
+</div>
+
+<!-- CIERRE -->
+<div id="p-cierre" class="oculto">
+  <div style="text-align:center;padding:14px 0 16px;"><p style="font-size:48px;">🎉</p><p style="font-size:22px;font-weight:800;margin-top:6px;">¡Turno cerrado!</p><p style="color:var(--muted);font-size:13px;margin-top:4px;" id="ci-fecha"></p></div>
+  <div class="card">
+    <div style="text-align:center;padding:8px 0 12px;border-bottom:1px solid var(--borde);margin-bottom:12px;"><p style="color:var(--muted);" id="ci-nombre"></p><p style="font-size:32px;font-weight:800;" id="ci-tot"></p><p style="color:var(--muted);font-size:13px;" id="ci-vj"></p></div>
+    <div class="fila"><p style="color:var(--muted);">🧑 Tu parte (30%)</p><p style="font-size:20px;font-weight:800;color:var(--btn);text-shadow:0 0 8px var(--btn);" id="ci-ch"></p></div>
+    <div class="fila"><p style="color:var(--muted);">🏢 Agencia (22%)</p><p style="font-size:17px;font-weight:700;" id="ci-ag"></p></div>
+    <div class="fila"><p style="color:var(--muted);">⛽ Combustible</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="ci-cb"></p></div>
+    <div class="fila"><p style="color:var(--muted);">🍫 Gastos</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="ci-gs"></p></div>
+    <div class="fila"><p style="color:var(--muted);">🔄 Reintegro 10%</p><p style="font-size:17px;font-weight:700;color:var(--btn);" id="ci-rei"></p></div>
+    <div class="fila"><p style="font-weight:700;">💰 Dueño neto</p><p style="font-size:22px;font-weight:800;color:var(--btn);text-shadow:0 0 8px var(--btn);" id="ci-nt"></p></div>
+  </div>
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">📋 Viajes del turno</p>
+    <div id="ci-lista-viajes"><p style="color:var(--muted);font-size:13px;">Sin viajes.</p></div>
+  </div>
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">Compartir y guardar</p>
+    <button id="btn-wa" style="width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:700;border:none;background:#25D366;color:#fff;cursor:pointer;margin-bottom:8px;font-family:inherit;">📱 WhatsApp al dueño</button>
+    <button id="btn-email" style="width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:700;border:none;background:#ea4335;color:#fff;cursor:pointer;margin-bottom:8px;font-family:inherit;">📧 Email</button>
+    <button id="btn-pdf" style="width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:700;border:none;background:#444;color:#fff;cursor:pointer;margin-bottom:8px;font-family:inherit;">🖨️ Imprimir / PDF</button>
+    <button id="btn-nuevo-turno" style="width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:600;border:1.5px solid var(--borde);background:transparent;color:var(--txt);cursor:pointer;font-family:inherit;">🔄 Nuevo turno</button>
+  </div>
+</div>
+
+<!-- DUEÑO -->
+<div id="p-dueno" class="oculto">
+  <!-- Header con total acumulado -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
+    <div>
+      <p style="color:var(--muted);font-size:12px;font-weight:600;">Vista del dueño 🚘</p>
+      <p style="font-size:32px;font-weight:800;" id="du-tot-header">$0</p>
+      <p style="color:var(--muted);font-size:12px;" id="du-nreg">0 viajes</p>
+    </div>
+    <div style="text-align:right;">
+      <p style="color:var(--muted);font-size:11px;">Tu parte neta</p>
+      <p style="font-size:24px;font-weight:800;color:var(--btn);text-shadow:0 0 8px var(--btn);" id="du-parte-header">$0</p>
+      <div style="display:flex;gap:5px;margin-top:5px;justify-content:flex-end;">
+        <button id="btn-temas-du" style="background:var(--card);border:1.5px solid var(--borde);border-radius:16px;padding:7px 10px;cursor:pointer;font-size:14px;">🎨</button>
+        <button id="btn-salir-du" class="btn-sm" style="color:#e74c3c;border-color:#e74c3c;">Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="text-align:center;padding:13px;">
+    <p style="color:var(--muted);font-size:12px;font-weight:600;margin-bottom:7px;">🎰 Tu número del sorteo</p>
+    <span class="badge" id="du-sorteo">---</span>
+  </div>
+
+  <!-- Registrar: viaje / combustible / gasto -->
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">¿Qué registrás?</p>
+    <div style="display:flex;gap:6px;margin-bottom:13px;">
+      <button class="tog on" id="du-t-viaje">🚗<br>Viaje</button>
+      <button class="tog" id="du-t-comb">⛽<br>Comb.</button>
+      <button class="tog" id="du-t-gasto">🍫<br>Gasto</button>
+    </div>
+    <!-- Viaje -->
+    <div id="du-f-viaje">
+      <div style="margin-bottom:10px;"><label class="lbl">Monto del viaje</label><input class="inp inp-big" id="du-v-m" type="number" inputmode="numeric" placeholder="$0"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">Referencia (opcional)</label><input class="inp" id="du-v-r" type="text" placeholder="centro, aeropuerto..." autocorrect="off"/></div>
+      <div style="margin-bottom:11px;"><label class="lbl" style="margin-bottom:7px;">Forma de pago</label>
+        <div style="display:flex;gap:7px;">
+          <button class="tog on" id="du-b-ef">💵 Efectivo</button>
+          <button class="tog" id="du-b-vt">📱 Virtual</button>
+        </div>
+      </div>
+    </div>
+    <!-- Combustible -->
+    <div id="du-f-comb" class="oculto">
+      <div style="margin-bottom:10px;"><label class="lbl">Monto del ticket</label><input class="inp inp-big" id="du-c-m" type="number" inputmode="numeric" placeholder="$0"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl" style="margin-bottom:7px;">Tipo</label>
+        <div style="display:flex;gap:7px;">
+          <button class="tog on" id="du-b-gnc">🟢 GNC</button>
+          <button class="tog" id="du-b-nafta">🔴 Nafta</button>
+          <button class="tog" id="du-b-diesel">🟡 Diesel</button>
+        </div>
+      </div>
+    </div>
+    <!-- Gasto -->
+    <div id="du-f-gasto" class="oculto">
+      <div style="margin-bottom:10px;"><label class="lbl">Monto</label><input class="inp inp-big" id="du-g-m" type="number" inputmode="numeric" placeholder="$0"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">¿Qué fue?</label><input class="inp" id="du-g-d" type="text" placeholder="puchos, agua..." autocorrect="off"/></div>
+    </div>
+    <p id="du-v-err" style="color:#e74c3c;font-size:13px;font-weight:600;margin-bottom:8px;display:none;">Ingresá los datos para continuar.</p>
+    <button id="btn-du-guardar" style="width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;box-shadow:0 0 16px var(--btn);font-family:inherit;">＋ Guardar viaje</button>
+  </div>
+
+  <!-- Resumen -->
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">Resumen del día</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Total recaudado</p><p style="font-size:17px;font-weight:700;color:var(--btn);" id="du-tot">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Agencia (22%)</p><p style="font-size:17px;font-weight:700;" id="du-ag">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">⛽ Combustible</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="du-cb">$0</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">🍫 Gastos</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="du-gs">$0</p></div>
+      <div class="stat" style="grid-column:span 2;border:1.5px solid var(--btn);box-shadow:0 0 7px var(--btn);"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">💰 Tu parte neta</p><p style="font-size:26px;font-weight:800;color:var(--btn);" id="du-nt">$0</p></div>
+    </div>
+    <div style="background:var(--c2);border-radius:9px;padding:10px;margin-top:10px;border-left:3px solid var(--btn);"><p style="font-size:12px;color:var(--muted);font-weight:600;">ℹ️ Tu parte: total − 22% agencia − combustible − gastos.</p></div>
+  </div>
+
+  <!-- Lista viajes + cierre -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <p class="lbl" style="margin:0;">Viajes del día</p>
+      <div style="display:flex;gap:6px;">
+        <button id="btn-du-cierre" class="btn-sm" style="color:var(--btn);border-color:var(--btn);box-shadow:0 0 6px var(--btn);">Cerrar turno</button>
+      </div>
+    </div>
+    <div id="lista-du"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0;">Sin viajes aún. ¡Arrancá!</p></div>
+  </div>
+</div>
+
+<!-- CIERRE DUEÑO -->
+<div id="p-cierre-du" class="oculto">
+  <div style="text-align:center;padding:14px 0 16px;"><p style="font-size:48px;">🎉</p><p style="font-size:22px;font-weight:800;margin-top:6px;">¡Turno cerrado!</p><p style="color:var(--muted);font-size:13px;margin-top:4px;" id="du-ci-fecha"></p></div>
+  <div class="card">
+    <div style="text-align:center;padding:8px 0 12px;border-bottom:1px solid var(--borde);margin-bottom:12px;">
+      <p style="color:var(--muted);" id="du-ci-nombre"></p>
+      <p style="font-size:32px;font-weight:800;" id="du-ci-tot"></p>
+      <p style="color:var(--muted);font-size:13px;" id="du-ci-vj"></p>
+    </div>
+    <div class="fila"><p style="color:var(--muted);">🏢 Agencia (22%)</p><p style="font-size:17px;font-weight:700;" id="du-ci-ag"></p></div>
+    <div class="fila"><p style="color:var(--muted);">⛽ Combustible</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="du-ci-cb"></p></div>
+    <div class="fila"><p style="color:var(--muted);">🍫 Gastos</p><p style="font-size:17px;font-weight:700;color:#e74c3c;" id="du-ci-gs"></p></div>
+    <div class="fila"><p style="font-weight:700;">💰 Tu parte neta</p><p style="font-size:22px;font-weight:800;color:var(--btn);text-shadow:0 0 8px var(--btn);" id="du-ci-nt"></p></div>
+  </div>
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">📋 Viajes del día</p>
+    <div id="du-ci-lista-viajes"><p style="color:var(--muted);font-size:13px;">Sin viajes.</p></div>
+  </div>
+  <div class="card">
+    <p class="lbl" style="margin-bottom:10px;">Compartir y guardar</p>
+    <button id="btn-du-wa" style="width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:700;border:none;background:#25D366;color:#fff;cursor:pointer;margin-bottom:8px;font-family:inherit;">📱 Compartir por WhatsApp</button>
+    <button id="btn-du-email" style="width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:700;border:none;background:#ea4335;color:#fff;cursor:pointer;margin-bottom:8px;font-family:inherit;">📧 Email</button>
+    <button id="btn-du-pdf" style="width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:700;border:none;background:#444;color:#fff;cursor:pointer;margin-bottom:8px;font-family:inherit;">🖨️ Imprimir / PDF</button>
+    <button id="btn-du-nuevo-turno" style="width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:600;border:1.5px solid var(--borde);background:transparent;color:var(--txt);cursor:pointer;font-family:inherit;">🔄 Nuevo turno</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="p-admin" class="oculto">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
+    <div><p style="color:var(--muted);font-size:12px;font-weight:600;">Panel administrador</p><p style="font-size:22px;font-weight:800;">Remisero</p></div>
+    <div style="display:flex;gap:5px;">
+      <button id="btn-temas-ad" style="background:var(--card);border:1.5px solid var(--borde);border-radius:16px;padding:7px 10px;cursor:pointer;font-size:14px;">🎨</button>
+      <button id="btn-salir-ad" class="btn-sm" style="color:#e74c3c;border-color:#e74c3c;">Salir</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:4px;background:var(--card);border-radius:10px;padding:4px;margin-bottom:11px;">
+    <button class="tab on" id="tab-u">👥 Usuarios</button>
+    <button class="tab" id="tab-s">🎰 Sorteo</button>
+    <button class="tab" id="tab-n">➕ Nuevo</button>
+  </div>
+  <div id="sec-u">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px;">
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Usuarios activos</p><p style="font-size:22px;font-weight:800;color:var(--btn);" id="a-act">3</p></div>
+      <div class="stat"><p style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;">Ingresos/mes</p><p style="font-size:17px;font-weight:700;color:var(--btn);" id="a-ing">$30.000</p></div>
+    </div>
+    <div id="lista-admin"></div>
+  </div>
+  <div id="sec-s" class="oculto">
+    <div class="card">
+      <p class="lbl" style="margin-bottom:11px;">Configurar sorteo</p>
+      <div style="margin-bottom:10px;"><label class="lbl">Mes del sorteo</label><input class="inp" id="sort-mes" type="month"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">¿Qué se sortea?</label><input class="inp" id="sort-desc" type="text" placeholder="Ej: Orden de compra $50.000" autocorrect="off"/></div>
+      <div style="text-align:center;margin:16px 0;"><div style="font-size:76px;line-height:1;" id="sort-disp">🎲</div>
+        <div id="sort-gan" class="oculto" style="margin-top:12px;">
+          <p style="color:var(--muted);margin-bottom:5px;">🏆 ¡Ganador!</p>
+          <p style="font-size:20px;font-weight:800;color:var(--btn);text-shadow:0 0 8px var(--btn);" id="sort-gnombre"></p>
+          <p style="font-size:26px;font-weight:800;margin-top:4px;" id="sort-gnum"></p>
+          <p style="color:var(--muted);font-size:13px;margin-top:4px;" id="sort-gpremio"></p>
+        </div>
+      </div>
+      <button id="btn-publicar-sorteo" style="width:100%;padding:12px;border-radius:10px;font-size:15px;font-weight:700;border:1.5px solid var(--btn);background:transparent;color:var(--btn);cursor:pointer;margin-bottom:8px;font-family:inherit;">📢 Publicar en el login</button>
+      <button id="btn-sorteo" style="width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;box-shadow:0 0 16px var(--btn);font-family:inherit;">🎰 ¡Realizar sorteo!</button>
+    </div>
+    <div class="card"><p class="lbl" style="margin-bottom:10px;">Números asignados</p><div id="lista-nums"></div></div>
+  </div>
+  <div id="sec-n" class="oculto">
+    <div class="card">
+      <p class="lbl" style="margin-bottom:11px;">Agregar nuevo usuario</p>
+      <div style="margin-bottom:10px;"><label class="lbl">Nombre completo</label><input class="inp" id="nu-nom" type="text" placeholder="Nombre del chofer o dueño" autocorrect="off" autocapitalize="words"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">Teléfono / usuario</label><input class="inp" id="nu-tel" type="text" placeholder="Ej: 2494123456" autocorrect="off" autocapitalize="off"/></div>
+      <div style="margin-bottom:10px;"><label class="lbl">Contraseña inicial</label><input class="inp" id="nu-pass" type="text" placeholder="La puede cambiar después"/></div>
+      <div style="margin-bottom:13px;"><label class="lbl" style="margin-bottom:7px;">Tipo</label>
+        <div style="display:flex;gap:7px;"><button class="tog on" id="nu-rc">🚗 Chofer</button><button class="tog" id="nu-rd">🚘 Dueño</button></div>
+      </div>
+      <p id="nu-err" style="color:#e74c3c;font-size:13px;font-weight:600;margin-bottom:8px;display:none;">Completá todos los campos.</p>
+      <button id="btn-agregar-u" style="width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:800;border:none;background:var(--btn);color:var(--btxt);cursor:pointer;box-shadow:0 0 16px var(--btn);font-family:inherit;">➕ Agregar usuario</button>
+    </div>
+    <div class="card"><p class="lbl" style="margin-bottom:10px;">Todos los usuarios</p><div id="lista-todos"></div></div>
+  </div>
+</div>
+
+</div>
+<script>
+// ===== REMISAPP / REMISERO — BACKEND PERSISTENTE =====
+const SUPA_URL = 'https://qvxsvsvfhrkmjarlzute.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzg5NzUxNTU3LCJleHAiOjIxMDUzMjc1NTd9.1r9xASB2z0reAoQMqlmEchxU5WicLcMjbGE2ErIca-0';
+const ADMIN_EMAIL = 'urbanostandil@gmail.com';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+var regs=[], progs=[], reservas=[], pago='ef', est='GNC', tipo='viaje', noche=false, usr=null, nuRolActual='c', timers=[];
+var turnoActual=null, duRegs=[], duPago='ef', duTipo='viaje', duEst='GNC';
+var adminUsers=[];
+var SORTEO_ESTADO={activo:false,desc:'',mes:'',ganador:null,gnum:'',gnombre:''};
+var rgRol='chofer';
+
+function fmt(n){ return '$'+Math.round(Number(n)||0).toLocaleString('es-AR'); }
+function horaA(){ var h=new Date(); return h.getHours()+':'+(h.getMinutes()<10?'0':'')+h.getMinutes(); }
+function fechaL(){ var f=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'}); return f.charAt(0).toUpperCase()+f.slice(1); }
+function notif(msg){ var n=document.getElementById('notif'); n.textContent=msg; n.style.display='block'; setTimeout(function(){n.style.display='none';},3000); }
+function ir(id){ ['p-login','p-bv','p-chofer','p-cierre','p-dueno','p-admin','p-cierre-du'].forEach(function(p){var el=document.getElementById(p);if(el)el.classList.add('oculto');}); document.getElementById(id).classList.remove('oculto'); window.scrollTo(0,0); }
+function hoyISO(){ return new Date().toISOString().slice(0,10); }
+function esc(v){ return String(v??'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function rolTexto(r){ return r==='chofer'?'🚗 Chofer':r==='dueno'?'🚘 Dueño':'👑 Administrador'; }
+function activoVencido(u){ return u && u.rol!=='administrador' && u.vence_hasta && u.vence_hasta < hoyISO(); }
+
+// ===== TEMAS =====
+document.querySelectorAll('.tema-op').forEach(function(el){el.addEventListener('click',function(){setTema(el.id.replace('tema-',''));});});
+document.getElementById('btn-cerrar-tema').addEventListener('click',function(){document.getElementById('temas-ov').classList.remove('v');});
+document.getElementById('temas-ov').addEventListener('click',function(e){if(e.target===this)this.classList.remove('v');});
+function abrirTemas(){document.getElementById('temas-ov').classList.add('v');}
+function setTema(t){document.getElementById('body').className='t-'+t;document.querySelectorAll('.tema-op').forEach(function(o){o.classList.remove('on');});var x=document.getElementById('tema-'+t);if(x)x.classList.add('on');document.getElementById('temas-ov').classList.remove('v');}
+['btn-temas-login','btn-temas-ch','btn-temas-du','btn-temas-ad'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('click',abrirTemas);});
+
+document.getElementById('btn-ojo').addEventListener('click',function(){var i=document.getElementById('lp');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈';});
+
+// ===== LOGIN =====
+document.getElementById('btn-entrar').addEventListener('click',entrar);
+document.getElementById('lu').addEventListener('keypress',function(e){if(e.key==='Enter')document.getElementById('lp').focus();});
+document.getElementById('lp').addEventListener('keypress',function(e){if(e.key==='Enter')entrar();});
+async function entrar(){
+  var identificador=document.getElementById('lu').value.trim();var pass=document.getElementById('lp').value;var err=document.getElementById('lerr');
+  if(!identificador||!pass){err.textContent='⚠️ Ingresá usuario/email y contraseña.';err.style.display='block';return;}
+  err.style.display='none';var b=document.getElementById('btn-entrar');b.textContent='Entrando...';b.disabled=true;
+  try{
+    var cred=identificador.includes('@')?{email:identificador}:{phone:identificador,password:pass};
+    if(identificador.includes('@')) cred.password=pass;
+    var res=await supa.auth.signInWithPassword(cred);if(res.error)throw res.error;
+    var authUser=res.data.user; if(!authUser)throw new Error('No se pudo iniciar la sesión.');
+    if((authUser.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()){
+      usr={nombre:'Administrador',rol:'administrador',email:ADMIN_EMAIL,activo:true,key:authUser.id,id:authUser.id};
+      await cargarSorteo();await renderAdmin();ir('p-admin');return;
+    }
+    var q=await supa.from('usuarios').select('*').eq('id',authUser.id).single();if(q.error||!q.data)throw new Error('No se encontró tu perfil. Contactá al administrador.');
+    var perfil=q.data;
+    if(!perfil.activo)throw new Error('Tu cuenta está desactivada. Contactá al administrador.');
+    if(activoVencido(perfil)){await supa.from('usuarios').update({activo:false}).eq('id',perfil.id);throw new Error('Tu suscripción está vencida. Contactá al administrador para renovarla.');}
+    usr={nombre:perfil.nombre,rol:perfil.rol,email:perfil.email,telefono:perfil.telefono,sorteo:perfil.sorteo_numero,turno:perfil.turno||1,activo:true,key:perfil.id,id:perfil.id,vence_hasta:perfil.vence_hasta};
+    var h=new Date().getHours();noche=(h>=20||h<6);aplicarModo();
+    if(usr.rol==='dueno'){document.getElementById('du-sorteo').textContent=usr.sorteo||'---';await cargarTurnoYRegistros('dueno');ir('p-dueno');}
+    else{document.getElementById('bv-turno').textContent='Turno '+(usr.turno||1);document.getElementById('bv-nombre').textContent=usr.nombre;document.getElementById('bv-hora').textContent=(h>=6&&h<18?'Turno día ☀️':'Turno noche 🌙');document.getElementById('bv-sorteo').textContent=usr.sorteo||'---';ir('p-bv');}
+  }catch(e){err.textContent='⚠️ '+(e.message||'Error al entrar');err.style.display='block';try{await supa.auth.signOut();}catch(_){} }
+  b.textContent='🚗 Entrar al turno';b.disabled=false;
+}
+
+document.getElementById('btn-arrancar').addEventListener('click',async function(){await cargarTurnoYRegistros('chofer');renderProg();renderRegistros();ir('p-chofer');});
+
+// ===== TURNOS Y DATOS =====
+async function obtenerTurno(rol){
+  if(!usr)return null;
+  var q=await supa.from('turnos').select('*').eq('usuario_id',usr.id).eq('rol',rol).eq('estado','abierto').order('inicio',{ascending:false}).limit(1).maybeSingle();
+  if(q.error)throw q.error;
+  return q.data||null;
+}
+async function crearTurno(rol){
+  var n=usr.turno||1;var q=await supa.from('turnos').insert({usuario_id:usr.id,rol:rol,numero:n,estado:'abierto'}).select().single();if(q.error)throw q.error;turnoActual=q.data;return turnoActual;}
+async function cargarTurnoYRegistros(rol){
+  turnoActual=await obtenerTurno(rol);if(!turnoActual)turnoActual=await crearTurno(rol);
+  if(rol==='chofer'){
+    var [r,rs,p]=await Promise.all([supa.from('registros').select('*').eq('usuario_id',usr.id).eq('turno_id',turnoActual.id).order('created_at'),supa.from('reservas').select('*').eq('usuario_id',usr.id).eq('turno_id',turnoActual.id).eq('estado','pendiente').order('created_at'),supa.from('programados').select('*').eq('usuario_id',usr.id).order('hora')]);
+    if(r.error)throw r.error;if(rs.error)throw rs.error;if(p.error)throw p.error;
+    regs=(r.data||[]).map(mapReg);reservas=(rs.data||[]).map(function(x){return{id:x.id,nombre:x.nombre,hora:x.hora_programada,mins:x.minutos,dbid:x.id};});progs=p.data||[];
+    actualizarUI();
+  }else{
+    var d=await supa.from('registros').select('*').eq('usuario_id',usr.id).eq('turno_id',turnoActual.id).order('created_at');if(d.error)throw d.error;duRegs=(d.data||[]).map(mapReg);actualizarUIDueno();
+  }
+}
+function mapReg(r){return{id:r.id,monto:Number(r.monto),desc:r.descripcion,tipo:r.tipo,pago:r.pago,est:r.combustible,hora:r.hora};}
+
+// ===== TIPOS CHOFER =====
+['viaje','comb','gasto','reserva'].forEach(function(t){document.getElementById('t-'+t).addEventListener('click',function(){setTipo(t);});});
+function setTipo(t){tipo=t;['viaje','comb','gasto','reserva'].forEach(function(x){document.getElementById('t-'+x).className='tog'+(x===t?' on':'');document.getElementById('f-'+x).classList[x===t?'remove':'add']('oculto');});var lb={viaje:'＋ Guardar viaje',comb:'⛽ Guardar combustible',gasto:'🍫 Guardar gasto',reserva:'⏰ Programar reserva'};document.getElementById('btn-g').textContent=lb[t];}
+
+document.getElementById('b-ef').addEventListener('click',function(){pago='ef';document.getElementById('b-ef').className='tog on';document.getElementById('b-vt').className='tog';});
+document.getElementById('b-vt').addEventListener('click',function(){pago='vt';document.getElementById('b-vt').className='tog on';document.getElementById('b-ef').className='tog';});
+['gnc','nafta','diesel'].forEach(function(x){document.getElementById('b-'+x).addEventListener('click',function(){est=x.charAt(0).toUpperCase()+x.slice(1);['gnc','nafta','diesel'].forEach(function(y){document.getElementById('b-'+y).className='tog'+(y===x?' on':'');});});});
+
+document.getElementById('btn-g').addEventListener('click',guardar);
+async function guardar(){
+  if(!turnoActual){try{turnoActual=await crearTurno('chofer');}catch(e){notif('⚠️ '+e.message);return;}}
+  var err=document.getElementById('v-err'),m=0,d='';
+  if(tipo==='viaje'){m=parseFloat(document.getElementById('v-m').value);d=document.getElementById('v-r').value.trim()||'—';}
+  else if(tipo==='comb'){m=parseFloat(document.getElementById('c-m').value);d=est;}
+  else if(tipo==='gasto'){m=parseFloat(document.getElementById('g-m').value);d=document.getElementById('g-d').value.trim()||'gasto';}
+  else if(tipo==='reserva'){
+    var rd=document.getElementById('r-d').value.trim(),mins=parseInt(document.getElementById('r-mins').value);
+    if(!rd||!mins){err.style.display='block';return;}err.style.display='none';var ah=new Date();ah.setMinutes(ah.getMinutes()+mins);var ha=ah.getHours()+':'+(ah.getMinutes()<10?'0':'')+ah.getMinutes();
+    var q=await supa.from('reservas').insert({usuario_id:usr.id,turno_id:turnoActual.id,nombre:rd,hora_programada:ha,minutos:mins}).select().single();if(q.error){notif('⚠️ '+q.error.message);return;}
+    reservas.push({id:q.data.id,nombre:rd,hora:ha,mins:mins,dbid:q.data.id});if(mins>5)timers.push(setTimeout(function(){notif('⏰ En 5 min: '+rd);},(mins-5)*60000));timers.push(setTimeout(function(){notif('🚗 ¡Ahora! Pasá a buscar a '+rd);},mins*60000));document.getElementById('r-d').value='';renderRegistros();notif('✅ Reserva para las '+ha);return;
+  }
+  if(!m||m<=0){err.style.display='block';return;}err.style.display='none';
+  var q=await supa.from('registros').insert({usuario_id:usr.id,turno_id:turnoActual.id,tipo:tipo,monto:m,descripcion:d,pago:tipo==='viaje'?pago:'—',combustible:tipo==='comb'?est:'',hora:horaA()}).select().single();if(q.error){notif('⚠️ '+q.error.message);return;}
+  regs.push(mapReg(q.data));['v-m','v-r','c-m','g-m','g-d'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});actualizarUI();notif('✅ '+fmt(m)+' guardado');
+}
+
+function actualizarUI(){var vj=regs.filter(function(r){return r.tipo==='viaje';}),cb=regs.filter(function(r){return r.tipo==='comb';}),gs=regs.filter(function(r){return r.tipo==='gasto';});var tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=cb.reduce(function(s,r){return s+r.monto;},0),tG=gs.reduce(function(s,r){return s+r.monto;},0),ef=vj.filter(function(r){return r.pago==='ef';}).reduce(function(s,r){return s+r.monto;},0),vt=vj.filter(function(r){return r.pago==='vt';}).reduce(function(s,r){return s+r.monto;},0);document.getElementById('ch-tot').textContent=fmt(tV);document.getElementById('ch-parte').textContent=fmt(tV*.3);document.getElementById('ch-nreg').textContent=regs.length+(regs.length===1?' registro':' registros');document.getElementById('r-tot').textContent=fmt(tV);document.getElementById('r-ch').textContent=fmt(tV*.3);document.getElementById('r-ag').textContent=fmt(tV*.22);document.getElementById('r-du').textContent=fmt(tV*.48);document.getElementById('r-cb').textContent=fmt(tC);document.getElementById('r-gs').textContent=fmt(tG);document.getElementById('r-nt').textContent=fmt(tV*.48-tC-tG);document.getElementById('r-ef').textContent=fmt(ef);document.getElementById('r-vt').textContent=fmt(vt);renderRegistros();}
+
+function renderRegistros(){var lista=document.getElementById('lista-ch'),total=regs.length+reservas.length;if(!total){lista.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0;">Sin registros aún. ¡Arrancá!</p>';return;}var ico={viaje:'🚗',comb:'⛽',gasto:'🍫'};lista.innerHTML='';reservas.forEach(function(r){var div=document.createElement('div');div.className='reg-row';div.innerHTML='<div style="flex:1;min-width:0;background:rgba(255,165,0,0.1);border-radius:8px;padding:8px;border-left:3px solid #ff9800;"><p style="font-size:14px;font-weight:600;">⏰ '+esc(r.nombre)+'</p><p style="font-size:11px;color:var(--muted);margin-top:2px;">Hora: '+esc(r.hora)+'</p></div>';var bc=document.createElement('button');bc.className='btn-sm';bc.style.cssText='color:#27ae60;border-color:#27ae60;font-size:12px;';bc.textContent='✓ Viaje';bc.onclick=function(){var nom=r.nombre;setTipo('viaje');document.getElementById('v-r').value=nom;notif('✅ Completá el monto del viaje');};var bd=document.createElement('button');bd.className='btn-del';bd.textContent='✕';bd.onclick=function(){borrarReserva(r.id);};div.appendChild(bc);div.appendChild(bd);lista.appendChild(div);});regs.slice().reverse().forEach(function(r,i){var idx=regs.length-i,sub=r.hora+(r.pago!=='—'?' · '+(r.pago==='ef'?'Efectivo':'Virtual'):(r.tipo==='comb'?' · '+r.est:''));var div=document.createElement('div');div.className='reg-row';div.innerHTML='<div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:600;">'+ico[r.tipo]+' #'+idx+' — '+esc(r.desc)+'</p><p style="font-size:11px;color:var(--muted);margin-top:2px;">'+esc(sub)+'</p></div><p style="font-size:15px;font-weight:700;color:'+(r.tipo==='viaje'?'var(--btn)':r.tipo==='comb'?'#e74c3c':'#e0a800')+';">'+(r.tipo!=='viaje'?'-':'')+fmt(r.monto)+'</p>';var b=document.createElement('button');b.className='btn-del';b.textContent='✕';b.onclick=function(){borrarReg(r.id);};div.appendChild(b);lista.appendChild(div);});}
+async function borrarReg(id){var q=await supa.from('registros').delete().eq('id',id).eq('usuario_id',usr.id);if(q.error){notif('⚠️ '+q.error.message);return;}regs=regs.filter(function(r){return r.id!==id;});actualizarUI();notif('🗑️ Registro eliminado');}
+async function borrarReserva(id){var q=await supa.from('reservas').delete().eq('id',id).eq('usuario_id',usr.id);if(q.error){notif('⚠️ '+q.error.message);return;}reservas=reservas.filter(function(r){return r.id!==id;});renderRegistros();notif('🗑️ Reserva cancelada');}
+
+// ===== CLIENTES FIJOS =====
+document.getElementById('btn-abrir-prog').addEventListener('click',function(){document.getElementById('f-nuevo-prog').classList.remove('oculto');});
+document.getElementById('btn-cancel-prog').addEventListener('click',function(){document.getElementById('f-nuevo-prog').classList.add('oculto');});
+document.getElementById('btn-guardar-prog').addEventListener('click',async function(){var n=document.getElementById('prog-nom').value.trim(),h=document.getElementById('prog-hora').value,m=parseFloat(document.getElementById('prog-monto').value)||0;if(!n||!h){alert('Completá nombre y horario.');return;}var q=await supa.from('programados').insert({usuario_id:usr.id,nombre:n,hora:h,monto:m}).select().single();if(q.error){notif('⚠️ '+q.error.message);return;}progs.push(q.data);document.getElementById('prog-nom').value='';document.getElementById('prog-hora').value='';document.getElementById('prog-monto').value='';document.getElementById('f-nuevo-prog').classList.add('oculto');renderProg();notif('📅 '+n+' guardado');});
+function renderProg(){var lista=document.getElementById('lista-prog');if(!progs.length){lista.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:8px 0;">Sin clientes fijos aún.</p>';return;}lista.innerHTML='';progs.forEach(function(p){var div=document.createElement('div');div.style.cssText='background:var(--c2);border-radius:9px;padding:11px;margin-bottom:7px;';div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;"><div><p style="font-size:14px;font-weight:600;">📅 '+esc(p.nombre)+'</p><p style="font-size:12px;color:var(--muted);margin-top:2px;">🕐 '+esc(p.hora)+(p.monto>0?' · '+fmt(p.monto):'')+'</p></div><div style="display:flex;gap:5px;"></div></div>';var btns=div.querySelector('div > div > div:last-child');var br=document.createElement('button');br.style.cssText='background:#27ae60;color:#fff;border:none;border-radius:8px;padding:8px 11px;font-size:12px;font-weight:700;cursor:pointer;';br.textContent='✓';br.onclick=function(){regProg(p.id);};var bd=document.createElement('button');bd.className='btn-del';bd.textContent='✕';bd.onclick=function(){borrarProg(p.id);};btns.appendChild(br);btns.appendChild(bd);lista.appendChild(div);});}
+async function regProg(id){var p=progs.find(function(x){return x.id===id;});if(!p||p.monto<=0){notif('ℹ️ Ingresá el monto para registrar');return;}var q=await supa.from('registros').insert({usuario_id:usr.id,turno_id:turnoActual.id,tipo:'viaje',monto:p.monto,descripcion:p.nombre,pago:pago,combustible:'',hora:horaA()}).select().single();if(q.error){notif('⚠️ '+q.error.message);return;}regs.push(mapReg(q.data));actualizarUI();notif('✅ '+p.nombre+' registrado');}
+async function borrarProg(id){var q=await supa.from('programados').delete().eq('id',id).eq('usuario_id',usr.id);if(q.error){notif('⚠️ '+q.error.message);return;}progs=progs.filter(function(p){return p.id!==id;});renderProg();notif('🗑️ Cliente eliminado');}
+
+// ===== CIERRE CHOFER =====
+document.getElementById('btn-cierre').addEventListener('click',async function(){if(!regs.length){notif('⚠️ No hay registros en este turno.');return;}var vj=regs.filter(function(r){return r.tipo==='viaje';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=regs.filter(function(r){return r.tipo==='comb';}).reduce(function(s,r){return s+r.monto;},0),tG=regs.filter(function(r){return r.tipo==='gasto';}).reduce(function(s,r){return s+r.monto;},0);document.getElementById('ci-fecha').textContent=fechaL();document.getElementById('ci-nombre').textContent=usr?usr.nombre:'';document.getElementById('ci-tot').textContent=fmt(tV);document.getElementById('ci-vj').textContent=vj.length+' viajes · '+regs.length+' registros';document.getElementById('ci-ch').textContent=fmt(tV*.3);document.getElementById('ci-ag').textContent=fmt(tV*.22);document.getElementById('ci-cb').textContent=fmt(tC);document.getElementById('ci-gs').textContent=fmt(tG);document.getElementById('ci-rei').textContent=fmt(tC*.1);document.getElementById('ci-nt').textContent=fmt(tV*.48-tC-tG);var lv=document.getElementById('ci-lista-viajes');if(lv){var h='';vj.forEach(function(r,i){h+="<div class='reg-row'><div style='flex:1;'><p style='font-size:13px;font-weight:600;'>🚗 #"+(i+1)+' — '+esc(r.desc)+"</p><p style='font-size:11px;color:var(--muted);'>"+esc(r.hora)+' · '+(r.pago==='ef'?'Efectivo':'Virtual')+'</p></div><p style=\"font-size:14px;font-weight:700;color:var(--btn);\">'+fmt(r.monto)+'</p></div>';});lv.innerHTML=h||'<p style="color:var(--muted);font-size:13px;">Sin viajes.</p>';}ir('p-cierre');});
+
+function armarMsg(nom,tV,tC,tG){var vj=regs.filter(function(r){return r.tipo==='viaje';}),lista='';vj.forEach(function(r,i){lista+='\n🚗 #'+(i+1)+' '+r.hora+' — '+r.desc+': '+fmt(r.monto);});return '🚗 *Remisero — Cierre*\n📅 '+new Date().toLocaleDateString('es-AR')+'\n👤 '+nom+'\n\n💰 Total: '+fmt(tV)+'\n🧑 Chofer 30%: '+fmt(tV*.3)+'\n🏢 Agencia 22%: '+fmt(tV*.22)+'\n⛽ Combustible: -'+fmt(tC)+'\n🍫 Gastos: -'+fmt(tG)+'\n💰 Dueño neto: '+fmt(tV*.48-tC-tG)+(lista?'\n\n📋 Viajes:'+lista:'')+'\n\n_Remisero — remisero.com.ar_';}
+async function cerrarTurnoPersistente(){if(!turnoActual||!usr)return;var q=await supa.from('turnos').update({estado:'cerrado',cierre:new Date().toISOString()}).eq('id',turnoActual.id).eq('usuario_id',usr.id);if(q.error){notif('⚠️ '+q.error.message);return false;}var next=(usr.turno||1)+1;await supa.from('usuarios').update({turno:next}).eq('id',usr.id);usr.turno=next;turnoActual=null;return true;}
+document.getElementById('btn-nuevo-turno').addEventListener('click',async function(){if(turnoActual){var ok=await cerrarTurnoPersistente();if(!ok)return;}regs=[];reservas=[];timers.forEach(clearTimeout);timers=[];await cargarTurnoYRegistros('chofer');actualizarUI();ir('p-chofer');notif('🚗 Nuevo turno iniciado!');});
+document.getElementById('btn-wa').addEventListener('click',function(){var vj=regs.filter(function(r){return r.tipo==='viaje';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=regs.filter(function(r){return r.tipo==='comb';}).reduce(function(s,r){return s+r.monto;},0),tG=regs.filter(function(r){return r.tipo==='gasto';}).reduce(function(s,r){return s+r.monto;},0);window.open('https://wa.me/?text='+encodeURIComponent(armarMsg(usr?usr.nombre:'',tV,tC,tG)),'_blank');});
+document.getElementById('btn-email').addEventListener('click',function(){var vj=regs.filter(function(r){return r.tipo==='viaje';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=regs.filter(function(r){return r.tipo==='comb';}).reduce(function(s,r){return s+r.monto;},0),tG=regs.filter(function(r){return r.tipo==='gasto';}).reduce(function(s,r){return s+r.monto;},0);window.open('mailto:?subject=Remisero — Cierre&body='+encodeURIComponent(armarMsg(usr?usr.nombre:'',tV,tC,tG).replace(/\*/g,'')),'_blank');});
+document.getElementById('btn-pdf').addEventListener('click',function(){var vj=regs.filter(function(r){return r.tipo==='viaje';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=regs.filter(function(r){return r.tipo==='comb';}).reduce(function(s,r){return s+r.monto;},0),tG=regs.filter(function(r){return r.tipo==='gasto';}).reduce(function(s,r){return s+r.monto;},0),ico={viaje:'🚗',comb:'⛽',gasto:'🍫'},lin=regs.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+ico[r.tipo]+' '+esc(r.desc)+'</td><td>'+r.hora+'</td><td style="text-align:right;">'+(r.tipo!=='viaje'?'-':'')+fmt(r.monto)+'</td></tr>';}).join(''),w=window.open('','_blank');if(!w)return;w.document.write('<!doctype html><html><head><title>Remisero</title><style>body{font-family:Arial;padding:20px;max-width:400px;margin:auto}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:6px;font-size:13px}th{background:#1a3a6e;color:#fff}</style></head><body><h2>🚗 Remisero</h2><p>'+fechaL()+'<br>'+esc(usr?usr.nombre:'')+'</p><table><tr><th>#</th><th>Descripción</th><th>Hora</th><th>Monto</th></tr>'+lin+'</table><p>Total viajes: <b>'+fmt(tV)+'</b></p><p>Chofer 30%: '+fmt(tV*.3)+'</p><p>Agencia 22%: '+fmt(tV*.22)+'</p><p>Combustible: -'+fmt(tC)+'</p><p>Gastos: -'+fmt(tG)+'</p><p><b>Dueño neto: '+fmt(tV*.48-tC-tG)+'</b></p></body></html>');w.document.close();w.print();});
+
+// ===== DUEÑO =====
+['viaje','comb','gasto'].forEach(function(t){document.getElementById('du-t-'+t).addEventListener('click',function(){setTipoDueno(t);});});
+function setTipoDueno(t){duTipo=t;['viaje','comb','gasto'].forEach(function(x){document.getElementById('du-t-'+x).className='tog'+(x===t?' on':'');document.getElementById('du-f-'+x).classList[x===t?'remove':'add']('oculto');});document.getElementById('btn-du-guardar').textContent={viaje:'＋ Guardar viaje',comb:'⛽ Guardar combustible',gasto:'🍫 Guardar gasto'}[t];}
+document.getElementById('du-b-ef').addEventListener('click',function(){duPago='ef';this.className='tog on';document.getElementById('du-b-vt').className='tog';});document.getElementById('du-b-vt').addEventListener('click',function(){duPago='vt';this.className='tog on';document.getElementById('du-b-ef').className='tog';});
+['gnc','nafta','diesel'].forEach(function(x){document.getElementById('du-b-'+x).addEventListener('click',function(){duEst=x.charAt(0).toUpperCase()+x.slice(1);['gnc','nafta','diesel'].forEach(function(y){document.getElementById('du-b-'+y).className='tog'+(y===x?' on':'');});});});
+document.getElementById('btn-du-guardar').addEventListener('click',async function(){var err=document.getElementById('du-v-err'),m=0,d='';if(duTipo==='viaje'){m=parseFloat(document.getElementById('du-v-m').value);d=document.getElementById('du-v-r').value.trim()||'—';}else if(duTipo==='comb'){m=parseFloat(document.getElementById('du-c-m').value);d=duEst;}else{m=parseFloat(document.getElementById('du-g-m').value);d=document.getElementById('du-g-d').value.trim()||'gasto';}if(!m||m<=0){err.style.display='block';return;}err.style.display='none';var q=await supa.from('registros').insert({usuario_id:usr.id,turno_id:turnoActual.id,tipo:duTipo,monto:m,descripcion:d,pago:duTipo==='viaje'?duPago:'—',combustible:duTipo==='comb'?duEst:'',hora:horaA()}).select().single();if(q.error){notif('⚠️ '+q.error.message);return;}duRegs.push(mapReg(q.data));if(duTipo==='viaje'){document.getElementById('du-v-m').value='';document.getElementById('du-v-r').value='';}else if(duTipo==='comb')document.getElementById('du-c-m').value='';else{document.getElementById('du-g-m').value='';document.getElementById('du-g-d').value='';}actualizarUIDueno();notif('✅ '+fmt(m)+' guardado');});
+function actualizarUIDueno(){var vj=duRegs.filter(function(r){return r.tipo==='viaje';}),cb=duRegs.filter(function(r){return r.tipo==='comb';}),gs=duRegs.filter(function(r){return r.tipo==='gasto';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=cb.reduce(function(s,r){return s+r.monto;},0),tG=gs.reduce(function(s,r){return s+r.monto;},0),neto=tV-(tV*.22)-tC-tG;document.getElementById('du-tot-header').textContent=fmt(tV);document.getElementById('du-nreg').textContent=duRegs.length+(duRegs.length===1?' registro':' registros');document.getElementById('du-parte-header').textContent=fmt(Math.max(0,neto));document.getElementById('du-tot').textContent=fmt(tV);document.getElementById('du-ag').textContent=fmt(tV*.22);document.getElementById('du-cb').textContent=fmt(tC);document.getElementById('du-gs').textContent=fmt(tG);document.getElementById('du-nt').textContent=fmt(Math.max(0,neto));renderListaDueno();}
+function renderListaDueno(){var lista=document.getElementById('lista-du');if(!duRegs.length){lista.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0;">Sin registros aún. ¡Arrancá!</p>';return;}var ico={viaje:'🚗',comb:'⛽',gasto:'🍫'};lista.innerHTML='';duRegs.slice().reverse().forEach(function(r,i){var div=document.createElement('div');div.className='reg-row';div.innerHTML='<div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:600;">'+ico[r.tipo]+' #'+(duRegs.length-i)+' — '+esc(r.desc)+'</p><p style="font-size:11px;color:var(--muted);margin-top:2px;">'+esc(r.hora)+'</p></div><p style="font-size:15px;font-weight:700;color:'+(r.tipo==='viaje'?'var(--btn)':'#e74c3c')+';">'+(r.tipo!=='viaje'?'-':'')+fmt(r.monto)+'</p>';var b=document.createElement('button');b.className='btn-del';b.textContent='✕';b.onclick=async function(){var q=await supa.from('registros').delete().eq('id',r.id).eq('usuario_id',usr.id);if(q.error){notif('⚠️ '+q.error.message);return;}duRegs=duRegs.filter(function(x){return x.id!==r.id;});actualizarUIDueno();notif('🗑️ Eliminado');};div.appendChild(b);lista.appendChild(div);});}
+
+document.getElementById('btn-du-cierre').addEventListener('click',function(){var vj=duRegs.filter(function(r){return r.tipo==='viaje';});if(!vj.length){notif('⚠️ No hay viajes registrados.');return;}var cb=duRegs.filter(function(r){return r.tipo==='comb';}),gs=duRegs.filter(function(r){return r.tipo==='gasto';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=cb.reduce(function(s,r){return s+r.monto;},0),tG=gs.reduce(function(s,r){return s+r.monto;},0),neto=tV-(tV*.22)-tC-tG;document.getElementById('du-ci-fecha').textContent=fechaL();document.getElementById('du-ci-nombre').textContent=usr?usr.nombre:'';document.getElementById('du-ci-tot').textContent=fmt(tV);document.getElementById('du-ci-vj').textContent=vj.length+' viajes · '+duRegs.length+' registros';document.getElementById('du-ci-ag').textContent=fmt(tV*.22);document.getElementById('du-ci-cb').textContent=fmt(tC);document.getElementById('du-ci-gs').textContent=fmt(tG);document.getElementById('du-ci-nt').textContent=fmt(Math.max(0,neto));var le=document.getElementById('du-ci-lista-viajes');le.innerHTML=duRegs.map(function(r,i){return "<div class='reg-row'><div style='flex:1;'><p style='font-size:13px;font-weight:600;'>"+(r.tipo==='viaje'?'🚗':r.tipo==='comb'?'⛽':'🍫')+' #'+(i+1)+' — '+esc(r.desc)+"</p><p style='font-size:11px;color:var(--muted);'>"+esc(r.hora)+"</p></div><p style='font-size:14px;font-weight:700;'>"+(r.tipo!=='viaje'?'-':'')+fmt(r.monto)+'</p></div>';}).join('');ir('p-cierre-du');});
+function armarMsgDueno(){var vj=duRegs.filter(function(r){return r.tipo==='viaje';}),cb=duRegs.filter(function(r){return r.tipo==='comb';}),gs=duRegs.filter(function(r){return r.tipo==='gasto';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=cb.reduce(function(s,r){return s+r.monto;},0),tG=gs.reduce(function(s,r){return s+r.monto;},0),neto=tV-(tV*.22)-tC-tG;return '🚘 *Remisero — Resumen dueño*\n📅 '+new Date().toLocaleDateString('es-AR')+'\n👤 '+(usr?usr.nombre:'')+'\n\n💰 Total viajes: '+fmt(tV)+'\n🏢 Agencia (22%): -'+fmt(tV*.22)+'\n⛽ Combustible: -'+fmt(tC)+'\n🍫 Gastos: -'+fmt(tG)+'\n💰 Mi parte neta: '+fmt(Math.max(0,neto))+'\n\n_Remisero — remisero.com.ar_';}
+document.getElementById('btn-du-wa').addEventListener('click',function(){window.open('https://wa.me/?text='+encodeURIComponent(armarMsgDueno()),'_blank');});document.getElementById('btn-du-email').addEventListener('click',function(){window.open('mailto:?subject=Remisero — Resumen dueño&body='+encodeURIComponent(armarMsgDueno().replace(/\*/g,'')),'_blank');});document.getElementById('btn-du-pdf').addEventListener('click',function(){var vj=duRegs.filter(function(r){return r.tipo==='viaje';}),cb=duRegs.filter(function(r){return r.tipo==='comb';}),gs=duRegs.filter(function(r){return r.tipo==='gasto';}),tV=vj.reduce(function(s,r){return s+r.monto;},0),tC=cb.reduce(function(s,r){return s+r.monto;},0),tG=gs.reduce(function(s,r){return s+r.monto;},0),w=window.open('','_blank');if(!w)return;w.document.write('<html><head><title>Remisero — Dueño</title><style>body{font-family:Arial;padding:20px;max-width:420px;margin:auto}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:6px;font-size:13px}th{background:#1a3a6e;color:#fff}</style></head><body><h2>🚘 Remisero — Dueño</h2><p>'+fechaL()+'<br>'+esc(usr?usr.nombre:'')+'</p><p>Total viajes: '+fmt(tV)+'</p><p>Agencia 22%: -'+fmt(tV*.22)+'</p><p>Combustible: -'+fmt(tC)+'</p><p>Gastos: -'+fmt(tG)+'</p><p><b>Mi parte neta: '+fmt(Math.max(0,tV-tV*.22-tC-tG))+'</b></p></body></html>');w.document.close();w.print();});
+document.getElementById('btn-du-nuevo-turno').addEventListener('click',async function(){if(turnoActual){await cerrarTurnoPersistente();}duRegs=[];turnoActual=null;await cargarTurnoYRegistros('dueno');actualizarUIDueno();ir('p-dueno');notif('🚗 Nuevo turno iniciado!');});
+
+// ===== ADMIN =====
+async function renderAdmin(){var lista=document.getElementById('lista-admin');lista.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px;">Cargando...</p>';var q=await supa.from('usuarios').select('*').neq('rol','administrador').order('created_at');if(q.error){lista.innerHTML='<p style="color:#e74c3c;font-size:13px;">'+esc(q.error.message)+'</p>';return;}adminUsers=q.data||[];var activos=adminUsers.filter(function(u){return u.activo&&!activoVencido(u);});document.getElementById('a-act').textContent=activos.length;document.getElementById('a-ing').textContent=fmt(activos.length*10000);lista.innerHTML='';if(!adminUsers.length){lista.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px;">Sin usuarios registrados aún.</p>';return;}adminUsers.forEach(function(v){var div=document.createElement('div');div.className='u-card';var venc=v.vence_hasta?new Date(v.vence_hasta+'T00:00:00').toLocaleDateString('es-AR'): 'Sin vencimiento';var estado=activoVencido(v)?'Vencido':v.activo?'Activo':'Inactivo';div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;"><div><p style="font-size:15px;font-weight:700;">'+esc(v.nombre)+'</p><p style="font-size:12px;color:var(--muted);margin-top:2px;">'+esc(v.email||v.telefono||'')+' · '+rolTexto(v.rol)+'</p></div><span style="background:'+(estado==='Activo'?'#1e4d1e':'#4d1e1e')+';color:'+(estado==='Activo'?'#6fcf6f':'#cf6f6f')+';border-radius:10px;padding:3px 10px;font-size:12px;font-weight:600;">'+estado+'</span></div><p style="font-size:12px;color:var(--muted);margin-bottom:4px;">📱 '+esc(v.telefono||'Sin teléfono')+'</p><p style="font-size:12px;color:var(--muted);margin-bottom:4px;">🎰 Sorteo: <strong style="color:var(--btn);">'+esc(v.sorteo_numero||'---')+'</strong></p><p style="font-size:12px;color:var(--muted);margin-bottom:8px;">📅 Vence: <strong>'+venc+'</strong></p><div style="display:flex;gap:6px;" class="acc"></div>';var acc=div.querySelector('.acc');var ba=document.createElement('button');ba.className='btn-sm';ba.style.cssText='flex:1;color:'+(v.activo?'#e74c3c':'#27ae60')+';border-color:'+(v.activo?'#e74c3c':'#27ae60')+';';ba.textContent=v.activo?'🚫 Desactivar':'✅ Activar';ba.onclick=function(){toggleActivo(v);};var br=document.createElement('button');br.className='btn-sm';br.style.cssText='flex:1;color:#27ae60;border-color:#27ae60;';br.textContent='🔄 Renovar';br.onclick=function(){renovar(v);};var bd=document.createElement('button');bd.className='btn-del';bd.textContent='🗑️ Borrar';bd.onclick=function(){borrarUsuario(v);};acc.appendChild(ba);acc.appendChild(br);acc.appendChild(bd);lista.appendChild(div);});}
+async function toggleActivo(v){var nuevo=!v.activo;var q=await supa.from('usuarios').update({activo:nuevo}).eq('id',v.id);if(q.error){notif('⚠️ '+q.error.message);return;}v.activo=nuevo;renderAdmin();notif(nuevo?'✅ Usuario activado':'🚫 Usuario desactivado');}
+async function renovar(v){var q=await supa.rpc('renovar_usuario',{p_id:v.id});if(q.error){notif('⚠️ '+q.error.message);return;}v.vence_hasta=q.data;v.activo=true;renderAdmin();notif('✅ 30 días renovados a '+v.nombre);}
+async function borrarUsuario(v){if(!confirm('¿Borrar definitivamente a '+v.nombre+'? Esta acción elimina su cuenta y no se puede deshacer.'))return;var q=await supa.functions.invoke('remisapp-admin',{body:{action:'delete',id:v.id}});if(q.error){notif('⚠️ '+(q.error.message||'No se pudo eliminar'));return;}renderAdmin();renderTodosUsuarios();notif('🗑️ '+v.nombre+' eliminado definitivamente');}
+['u','s','n'].forEach(function(t){document.getElementById('tab-'+t).addEventListener('click',function(){aTab(t);});});
+function aTab(t){['u','s','n'].forEach(function(s){document.getElementById('tab-'+s).className='tab'+(s===t?' on':'');document.getElementById('sec-'+s).classList[s===t?'remove':'add']('oculto');});if(t==='u')renderAdmin();if(t==='s')renderNumsSorteo();if(t==='n')renderTodosUsuarios();}
+
+async function renderNumsSorteo(){var lista=document.getElementById('lista-nums');lista.innerHTML='';var a=adminUsers.filter(function(v){return v.sorteo_numero;});a.forEach(function(v){var div=document.createElement('div');div.className='fila';div.innerHTML='<div><p style="font-size:14px;font-weight:600;">'+esc(v.nombre)+'</p><p style="font-size:11px;color:var(--muted);">'+esc(v.telefono||v.email||'')+' · '+rolTexto(v.rol)+'</p></div><span class="badge" style="font-size:14px;padding:4px 12px;">'+esc(v.sorteo_numero)+'</span>';lista.appendChild(div);});}
+document.getElementById('btn-publicar-sorteo').addEventListener('click',async function(){var desc=document.getElementById('sort-desc').value.trim(),mes=document.getElementById('sort-mes').value||'';if(!desc){notif('⚠️ Ingresá qué se sortea primero.');return;}var q=await supa.from('sorteos').update({activo:true,descripcion:desc,mes:mes,ganador_id:null,ganador_numero:null,ganador_nombre:null}).eq('id',1);if(q.error){notif('⚠️ '+q.error.message);return;}SORTEO_ESTADO={activo:true,desc:desc,mes:mes,ganador:null,gnum:'',gnombre:''};actualizarBannerSorteo();notif('✅ Sorteo publicado en el login');});
+document.getElementById('btn-sorteo').addEventListener('click',async function(){var a=adminUsers.filter(function(e){return e.sorteo_numero&&e.activo&&!activoVencido(e);});if(!a.length){notif('⚠️ No hay usuarios activos con número de sorteo.');return;}var desc=document.getElementById('sort-desc').value.trim()||'Sorteo Remisero',d=document.getElementById('sort-disp');document.getElementById('sort-gan').classList.add('oculto');var c=0,anim=setInterval(function(){var r=a[Math.floor(Math.random()*a.length)];d.textContent=r.sorteo_numero;c++;if(c>=28){clearInterval(anim);var g=a[Math.floor(Math.random()*a.length)];d.textContent=g.sorteo_numero;document.getElementById('sort-gnombre').textContent='🏆 '+g.nombre;document.getElementById('sort-gnum').textContent='Número: '+g.sorteo_numero;document.getElementById('sort-gpremio').textContent='Premio: '+desc;document.getElementById('sort-gan').classList.remove('oculto');supa.from('sorteos').update({activo:true,descripcion:desc,mes:document.getElementById('sort-mes').value||'',ganador_id:g.id,ganador_numero:g.sorteo_numero,ganador_nombre:g.nombre}).eq('id',1).then(function(){SORTEO_ESTADO.ganador=g.id;SORTEO_ESTADO.gnum=g.sorteo_numero;SORTEO_ESTADO.gnombre=g.nombre;actualizarBannerSorteo();});notif('🎉 ¡Ganó '+g.nombre+'!');}},100);});
+
+// ===== ALTA ADMIN =====
+document.getElementById('nu-rc').addEventListener('click',function(){nuRolActual='c';this.className='tog on';document.getElementById('nu-rd').className='tog';});document.getElementById('nu-rd').addEventListener('click',function(){nuRolActual='d';this.className='tog on';document.getElementById('nu-rc').className='tog';});
+document.getElementById('btn-agregar-u').addEventListener('click',async function(){var n=document.getElementById('nu-nom').value.trim(),t=document.getElementById('nu-tel').value.trim(),p=document.getElementById('nu-pass').value.trim(),err=document.getElementById('nu-err');if(!n||!t||!p){err.textContent='Completá todos los campos.';err.style.display='block';return;}if(p.length<6){err.textContent='La contraseña debe tener al menos 6 caracteres.';err.style.display='block';return;}err.style.display='none';this.textContent='Creando...';this.disabled=true;try{var payload={action:'create',nombre:n,password:p,rol:nuRolActual==='c'?'chofer':'dueno'};if(t.includes('@'))payload.email=t;else payload.telefono=t;var q=await supa.functions.invoke('remisapp-admin',{body:payload});if(q.error)throw q.error;if(q.data&&q.data.error)throw new Error(q.data.error);['nu-nom','nu-tel','nu-pass'].forEach(function(id){document.getElementById(id).value='';});notif('✅ '+n+' agregado · Sorteo: '+q.data.sorteo_numero);await renderAdmin();renderTodosUsuarios();}catch(e){err.textContent='Error: '+(e.message||'No se pudo crear');err.style.display='block';}this.textContent='➕ Agregar usuario';this.disabled=false;});
+async function renderTodosUsuarios(){var lista=document.getElementById('lista-todos');lista.innerHTML='';if(!adminUsers.length){lista.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;">Sin usuarios aún.</p>';return;}adminUsers.forEach(function(v){var div=document.createElement('div');div.className='fila';div.innerHTML='<div><p style="font-size:13px;font-weight:600;">'+esc(v.nombre)+'</p><p style="font-size:11px;color:var(--muted);">'+esc(v.email||v.telefono||'')+' · '+rolTexto(v.rol)+' · 🎰'+esc(v.sorteo_numero||'---')+'</p></div>';var b=document.createElement('button');b.className='btn-del';b.textContent='🗑️';b.onclick=function(){borrarUsuario(v);};div.appendChild(b);lista.appendChild(div);});}
+
+// ===== SORTEO LOGIN =====
+async function cargarSorteo(){var q=await supa.from('sorteos').select('*').eq('id',1).maybeSingle();if(q.data){SORTEO_ESTADO={activo:q.data.activo,desc:q.data.descripcion||'',mes:q.data.mes||'',ganador:q.data.ganador_id,gnum:q.data.ganador_numero||'',gnombre:q.data.ganador_nombre||''};}actualizarBannerSorteo();}
+function actualizarBannerSorteo(){var banner=document.getElementById('sorteo-banner');if(!SORTEO_ESTADO.activo||!SORTEO_ESTADO.desc){banner.style.display='none';return;}banner.style.display='block';document.getElementById('sb-desc').textContent='🎁 '+SORTEO_ESTADO.desc+(SORTEO_ESTADO.mes?' — '+SORTEO_ESTADO.mes:'');var gan=document.getElementById('sb-ganador');if(SORTEO_ESTADO.ganador){gan.style.display='block';document.getElementById('sb-gnombre').textContent=SORTEO_ESTADO.gnombre;document.getElementById('sb-gnum').textContent='Número ganador: '+SORTEO_ESTADO.gnum;}else gan.style.display='none';}
+cargarSorteo();
+
+// ===== REGISTRO PÚBLICO POR EMAIL (se conserva la pantalla existente) =====
+document.getElementById('btn-registrar').addEventListener('click',async function(){var nom=document.getElementById('rg-nom').value.trim(),email=document.getElementById('rg-email').value.trim(),pass=document.getElementById('rg-pass').value,err=document.getElementById('rg-err');if(!nom||!email||!pass){err.textContent='⚠️ Completá todos los campos.';err.style.display='block';return;}if(pass.length<6){err.textContent='⚠️ La contraseña debe tener al menos 6 caracteres.';err.style.display='block';return;}err.style.display='none';this.textContent='Creando cuenta...';this.disabled=true;try{var q=await supa.auth.signUp({email:email,password:pass});if(q.error)throw q.error;if(!q.data.user)throw new Error('No se creó el usuario.');var ins=await supa.from('usuarios').insert({id:q.data.user.id,nombre:nom,email:email,rol:rgRol,activo:false,turno:1});if(ins.error)throw ins.error;err.style.cssText='color:#27ae60;font-size:13px;font-weight:600;margin-bottom:8px;display:block;';err.textContent='✅ Cuenta creada. El admin te activará pronto.';document.getElementById('rg-nom').value='';document.getElementById('rg-email').value='';document.getElementById('rg-pass').value='';}catch(e){err.style.cssText='color:#e74c3c;font-size:13px;font-weight:600;margin-bottom:8px;display:block;';err.textContent='⚠️ '+(e.message||'Error');}this.textContent='✨ Crear cuenta';this.disabled=false;});
+document.getElementById('rg-rc').addEventListener('click',function(){rgRol='chofer';this.className='tog on';document.getElementById('rg-rd').className='tog';});document.getElementById('rg-rd').addEventListener('click',function(){rgRol='dueno';this.className='tog on';document.getElementById('rg-rc').className='tog';});
+
+// ===== SALIR =====
+async function salir(){regs=[];duRegs=[];reservas=[];progs=[];turnoActual=null;timers.forEach(clearTimeout);timers=[];usr=null;try{await supa.auth.signOut();}catch(e){}document.getElementById('lu').value='';document.getElementById('lp').value='';ir('p-login');}
+document.getElementById('btn-salir-ch').addEventListener('click',salir);document.getElementById('btn-salir-du').addEventListener('click',salir);document.getElementById('btn-salir-ad').addEventListener('click',salir);
+
+// ===== MODO DÍA/NOCHE DEL HTML ORIGINAL =====
+function aplicarModo(){var ml=document.getElementById('modo-lbl'),ic=document.getElementById('tog-ico'),tx=document.getElementById('tog-txt');if(ml)ml.textContent=noche?'Turno noche 🌙':'Turno día ☀️';if(ic)ic.textContent=noche?'☀️':'🌙';if(tx)tx.textContent=noche?'Día':'Noche';}
+document.getElementById('btn-modo').addEventListener('click',function(){noche=!noche;aplicarModo();});
+</script>
+</body>
+</html>
